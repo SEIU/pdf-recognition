@@ -1,23 +1,25 @@
 #!/usr/bin/env python
+import io
 import sys
 
-from pypdf import PdfReader, PdfWriter
+import numpy as np
+from PIL import Image, ImageChops
+from pypdf import PdfReader
 
 reader = PdfReader(sys.argv[1])
-writer = PdfWriter()
 
-# Add page from reader, but crop it to half size.
 page = reader.pages[0]
-page.mediabox.lower_left = (
-    page.mediabox.right * 0.12,
-    page.mediabox.top * 0.550,
-)
-page.mediabox.upper_right = (
-    page.mediabox.right * 0.75,
-    page.mediabox.top * 0.528,
-)
-writer.add_page(page)
+img = page.images[1].data
+# Read as grayscale
+_img = Image.open(io.BytesIO(img)).convert('L')
+# Invert colors (background as zero in NumPy)
+img = ImageChops.invert(_img)
 
-# Write to pypdf-output.pdf.
-with open("pypdf-output.pdf", "wb") as fp:
-    writer.write(fp)
+first_sig = img.crop((25, 1880, 400, 2079))
+
+first_sig.show()
+arr = np.array(first_sig)
+print(arr.shape, arr.mean())
+print(arr)
+
+
