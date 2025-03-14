@@ -1,3 +1,6 @@
+# Exclude any generated PDFs that could accidentally contain PII
+*.pdf
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
