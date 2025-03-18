@@ -35,10 +35,7 @@ def find_outline(arr: np.ndarray) -> np.ndarray:
         elif top_line > 0:
             found_top = True
 
-    # print("XXX", top_line, bottom_line)
     arr = arr[top_line + 1 : bottom_line]
-    # print(np.array(arr.mean(axis=1), dtype=int))  # XXX
-    # print(np.array(arr.var(axis=1), dtype=int))  # XXX
     return arr
 
 
@@ -79,6 +76,7 @@ if __name__ == "__main__":
             # But sometimes there is only index 0
             data = page.images[0].data
         img = Image.open(io.BytesIO(data))
+        print("Filename|Category|Signed|PixDensity")
 
         # Config has region as percentages, convert to pixel offsets
         for name, (_left, _upper, _right, _lower) in regions.items():  # type: ignore
@@ -97,7 +95,7 @@ if __name__ == "__main__":
             density = max(top_half.mean(), bottom_half.mean(), middle.mean())
             fn = basename(fname)
             if density > 10:
-                print(f"{fn} is likely to have a {name} signature ({density:0.1f})")
+                print(f"{fn}|{name}|Y|{density:0.1f}")
             else:
-                print(f"{fn} is unlikely to have a {name} signature ({density:0.1f})")
+                print(f"{fn}|{name}|N|{density:0.1f}")
                 Image.fromarray(sig, mode="L").show()  # XXX
