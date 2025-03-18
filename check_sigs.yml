@@ -8,6 +8,6 @@ repr:
 dues:
   # left, upper, right, lower (page percentage)
   - 0.05
-  - 0.65
+  - 0.60
   - 0.80
   - 0.82

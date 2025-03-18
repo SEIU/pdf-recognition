@@ -98,4 +98,4 @@ if __name__ == "__main__":
                 print(f"{fn}|{name}|Y|{density:0.1f}")
             else:
                 print(f"{fn}|{name}|N|{density:0.1f}")
-                Image.fromarray(sig, mode="L").show()  # XXX
+                # Image.fromarray(sig, mode="L").show()  # XXX
