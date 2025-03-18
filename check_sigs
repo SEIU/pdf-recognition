@@ -1,25 +1,103 @@
 #!/usr/bin/env python
 import io
+from os.path import basename
 import sys
+import yaml
 
 import numpy as np
 from PIL import Image, ImageChops
 from pypdf import PdfReader
 
-reader = PdfReader(sys.argv[1])
 
-page = reader.pages[0]
-img = page.images[1].data
-# Read as grayscale
-_img = Image.open(io.BytesIO(img)).convert('L')
-# Invert colors (background as zero in NumPy)
-img = ImageChops.invert(_img)
+def find_outline(arr: np.ndarray) -> np.ndarray:
+    """
+    Identify a box around a signature.
 
-first_sig = img.crop((25, 1880, 400, 2079))
+    Boxes are assumed to be drawn with approximately grayscale 44.
 
-first_sig.show()
-arr = np.array(first_sig)
-print(arr.shape, arr.mean())
-print(arr)
+    Other lines of text may be darker on average, but their
+    variance between black and white pixels will be much higher
+    """
+    row_means = arr.mean(axis=1)
+    row_vars = arr.var(axis=1)
+    top_line, bottom_line = 0, arr.shape[0]
+    found_top = False
+    many = 1_000  # Number or rows larger than we ever consider
+    for n, mean, var in zip(range(many), row_means, row_vars):
+        if mean > 25 and var < 250:
+            if not found_top:
+                top_line = n
+                # print(f"row {n} {mean=} {var=}")
+            else:
+                bottom_line = n
+                # print(f"row {n} {mean=} {var=}")
+                break
+        elif top_line > 0:
+            found_top = True
+
+    # print("XXX", top_line, bottom_line)
+    arr = arr[top_line + 1 : bottom_line]
+    # print(np.array(arr.mean(axis=1), dtype=int))  # XXX
+    # print(np.array(arr.var(axis=1), dtype=int))  # XXX
+    return arr
 
 
+def find_signature(img, region: tuple[float, float, float, float]) -> np.ndarray:
+    # The signature position is not completely fixed, but SHOULD BE
+    # bounded by an outline of approximately pixel value 44
+    img = img.convert("L")
+    img = ImageChops.invert(img)
+    sig = img.crop(region)
+    arr = np.array(sig)
+    arr = find_outline(arr)
+    return arr
+
+
+def usage():
+    print(f"USAGE: {basename(__file__)} [pdf1 [pdf2 [...]]]")
+    print("Must have file `check_sigs.yml` containing page layout info")
+    sys.exit(1)
+
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        usage()
+
+    with open("check_sigs.yml") as config:
+        try:
+            regions = yaml.safe_load(config)
+        except:
+            usage()
+
+    for fname in sys.argv[1:]:
+        reader = PdfReader(fname)
+        page = reader.pages[0]
+        try:
+            # The real page is typically in index 1
+            data = page.images[1].data
+        except IndexError:
+            # But sometimes there is only index 0
+            data = page.images[0].data
+        img = Image.open(io.BytesIO(data))
+
+        # Config has region as percentages, convert to pixel offsets
+        for name, (_left, _upper, _right, _lower) in regions.items():  # type: ignore
+            width, height = img.size
+            left = _left * width
+            upper = _upper * height
+            right = _right * width
+            lower = _lower * height
+            
+            sig = find_signature(img, (left, upper, right, lower))
+            # Some signatories do not use full box, look for top half and bottom half
+            nRows = sig.shape[0]
+            top_half = sig[:nRows//2]
+            bottom_half = sig[nRows//2:]
+            middle = sig[nRows//4:3*nRows//4]
+            density = max(top_half.mean(), bottom_half.mean(), middle.mean())
+            fn = basename(fname)
+            if density > 10:
+                print(f"{fn} is likely to have a {name} signature ({density:0.1f})")
+            else:
+                print(f"{fn} is unlikely to have a {name} signature ({density:0.1f})")
+                Image.fromarray(sig, mode="L").show()  # XXX
