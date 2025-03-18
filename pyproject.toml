@@ -7,6 +7,7 @@ requires-python = ">=3.13"
 dependencies = [
     "ipython",
     "numpy",
+    "pandas",
     "pillow",
     "pypdf[image]",
     "pyyaml",

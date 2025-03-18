@@ -8,6 +8,8 @@ import numpy as np
 from PIL import Image, ImageChops
 from pypdf import PdfReader
 
+density_threshold = 5
+
 
 def find_outline(arr: np.ndarray) -> np.ndarray:
     """
@@ -51,13 +53,25 @@ def find_signature(img, region: tuple[float, float, float, float]) -> np.ndarray
 def parse_filename(fname: str) -> tuple[str, str, str]:
     "Extract firstname, lastname, and date from scan filename"
     date_at = fname.find("20")  # ISO 8601 20NN-NN-NN
-    date = fname[date_at:date_at+10]
-    name = fname[:date_at-1].split("/")[-1]
+    date = fname[date_at : date_at + 10]
+    name = fname[: date_at - 1].split("/")[-1]
     # There are sometimes dots inside name components :-(
     parts = name.split(".")
     first = parts[0]
-    last = parts[-1] 
+    last = parts[-1]
     return first, last, date
+
+
+def signature_sections(sig):
+    nRows, nCols = sig.shape
+
+    top_half = sig[: nRows // 2]
+    bottom_half = sig[nRows // 2 :]
+    middle_vert = sig[nRows // 4 : 3 * nRows // 4]
+    left_third = sig[:, 0 : nCols // 3]
+    middle_horiz = sig[:, nCols // 3 : 2 * nCols // 3]
+    right_third = sig[:, 2 : nCols // 3 :]
+    return top_half, bottom_half, middle_vert, left_third, middle_horiz, right_third
 
 
 def usage():
@@ -96,16 +110,13 @@ if __name__ == "__main__":
             upper = _upper * height
             right = _right * width
             lower = _lower * height
-            
+
             sig = find_signature(img, (left, upper, right, lower))
             # Some signatories do not use full box, look for top half and bottom half
-            nRows = sig.shape[0]
-            top_half = sig[:nRows//2]
-            bottom_half = sig[nRows//2:]
-            middle = sig[nRows//4:3*nRows//4]
-            density = max(top_half.mean(), bottom_half.mean(), middle.mean())
+            sections = signature_sections(sig)
+            density = max(*[section.mean() for section in sections])
             fn = basename(fname)
-            if density > 10:
+            if density > density_threshold:
                 print(f"{first}|{last}|{date}|{name}|Y|{density:0.1f}")
             else:
                 print(f"{first}|{last}|{date}|{name}|N|{density:0.1f}")
