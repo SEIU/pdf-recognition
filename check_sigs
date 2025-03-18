@@ -27,10 +27,8 @@ def find_outline(arr: np.ndarray) -> np.ndarray:
         if mean > 25 and var < 250:
             if not found_top:
                 top_line = n
-                # print(f"row {n} {mean=} {var=}")
             else:
                 bottom_line = n
-                # print(f"row {n} {mean=} {var=}")
                 break
         elif top_line > 0:
             found_top = True
@@ -50,6 +48,18 @@ def find_signature(img, region: tuple[float, float, float, float]) -> np.ndarray
     return arr
 
 
+def parse_filename(fname: str) -> tuple[str, str, str]:
+    "Extract firstname, lastname, and date from scan filename"
+    date_at = fname.find("20")  # ISO 8601 20NN-NN-NN
+    date = fname[date_at:date_at+10]
+    name = fname[:date_at-1].split("/")[-1]
+    # There are sometimes dots inside name components :-(
+    parts = name.split(".")
+    first = parts[0]
+    last = parts[-1] 
+    return first, last, date
+
+
 def usage():
     print(f"USAGE: {basename(__file__)} [pdf1 [pdf2 [...]]]")
     print("Must have file `check_sigs.yml` containing page layout info")
@@ -66,6 +76,7 @@ if __name__ == "__main__":
         except:
             usage()
 
+    print("Firstname|Lastname|Date|Category|Signed|SigDensity")
     for fname in sys.argv[1:]:
         reader = PdfReader(fname)
         page = reader.pages[0]
@@ -76,7 +87,7 @@ if __name__ == "__main__":
             # But sometimes there is only index 0
             data = page.images[0].data
         img = Image.open(io.BytesIO(data))
-        print("Filename|Category|Signed|PixDensity")
+        first, last, date = parse_filename(fname)
 
         # Config has region as percentages, convert to pixel offsets
         for name, (_left, _upper, _right, _lower) in regions.items():  # type: ignore
@@ -95,7 +106,7 @@ if __name__ == "__main__":
             density = max(top_half.mean(), bottom_half.mean(), middle.mean())
             fn = basename(fname)
             if density > 10:
-                print(f"{fn}|{name}|Y|{density:0.1f}")
+                print(f"{first}|{last}|{date}|{name}|Y|{density:0.1f}")
             else:
-                print(f"{fn}|{name}|N|{density:0.1f}")
+                print(f"{first}|{last}|{date}|{name}|N|{density:0.1f}")
                 # Image.fromarray(sig, mode="L").show()  # XXX
