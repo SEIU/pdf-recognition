@@ -52,7 +52,7 @@ def find_signature(img, region: tuple[float, float, float, float]) -> np.ndarray
 
 def parse_filename(fname: str) -> tuple[str, str, str]:
     "Extract firstname, lastname, and date from scan filename"
-    date_at = fname.rfind("20")  # ISO 8601 20NN-NN-NN
+    date_at = fname.rfind("202")  # ISO 8601 202N-NN-NN
     date = fname[date_at : date_at + 10]
     name = fname[: date_at - 1].split("/")[-1]
     # There are sometimes dots inside name components :-(
