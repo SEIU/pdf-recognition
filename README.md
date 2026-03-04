@@ -13,14 +13,14 @@ Converts to a rasterized image then looks for a box
 ### Dependencies
 
 * Python 3.12.3 (latest) via Bash Command Line
-* [uv](https://docs.astral.sh/uv/getting-started/installation/)
-* 
+* Git
+* [uv](https://docs.astral.sh/uv/getting-started/installation/) 0.10.8 (latest)
 
 ### Installing
 
-* Clone repo
-* uv sync (create the .venv directory)
-* activate venv
+* Clone repo [(how to clone a repo)](https://www.geeksforgeeks.org/git/how-to-git-clone-a-remote-repository/)
+* ```uv sync``` (create the .venv directory)
+* ```source .venv/bin/activate``` (activate the .venv enviornment)
 * cd to the repo
 
 ### Executing program
@@ -37,9 +37,7 @@ ls ../location_of_files/* | xargs ./check_sigs
 ## Help
 
 Any advise for common problems or issues.
-```
-command to run if program contains helper info
-```
+* Input Welcome!
 
 ## Authors
 
@@ -49,7 +47,7 @@ David Mertz
 ## Version History
 
 * 0.2
-    * Various bug fixes and optimizations
+    * ReadMe Added
     * See [commit change]() or See [release history]()
 * 0.1
     * Initial Release
@@ -57,5 +55,5 @@ David Mertz
 
 ## Acknowledgments
 
-Inspiration, code snippets, etc.
 * [Readme Template](https://gist.github.com/DomPizzie/7a5ff55ffa9081f2de27c315f5018afc)
+* [Raziq Noorali (for the ReadMe)](https://github.com/Provider10)
