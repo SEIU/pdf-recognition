@@ -4,9 +4,11 @@ Checks cards for signatures
 
 ## Description
 
-Analyzes cards or forms downloaded from VAN as PDFs. Assuming two signature boxes, this code will determine the locations of the boxes and output a pixel density, along with a determination of the existance of a signature or not (set at XXX by default). 
+Analyzes cards or forms downloaded from VAN as PDFs. Assuming two signature boxes,
+this code will determine the locations of the boxes and output a pixel density, 
+along with a determination of the existence of a signature or not. 
 
-Converts to a rasterized image then looks for a box
+Converts to a rasterized image then looks for a box.
 
 ## Getting Started
 
