@@ -1,14 +1,72 @@
-#!/usr/bin/env python
 import io
 from os.path import basename
-import sys
-import yaml
 
 import numpy as np
 from PIL import Image, ImageChops
 from pypdf import PdfReader
 
-density_threshold = 5
+default_density_threshold = 5
+
+
+def trim(
+    img: Image.Image,
+) -> Image.Image:
+    bg = Image.new("RGB", img.size, img.getpixel((0, 0)))
+    diff = ImageChops.difference(img.convert("RGB"), bg)
+    diff = ImageChops.add(diff, diff, 2.0, -100)
+    bbox = diff.getbbox()
+    if bbox:
+        img = img.crop(bbox)
+    return img
+
+
+def report(fname: str, cfg: dict) -> None:
+    """
+    Analyze a PDF file and report on the presence and density of signatures.
+    """
+    # Check the configuration dict
+    if "signatures" not in cfg:
+        raise ValueError(
+            "`signature` key indicating regions is missing from the config file"
+        )
+    regions = cfg["signatures"]
+    density_threshold = cfg.get("density_threshold", default_density_threshold)
+
+    reader = PdfReader(fname)
+    page = reader.pages[0]
+    try:
+        # The real page is typically in index 1
+        data = page.images[1].data
+    except IndexError:
+        # But sometimes there is only index 0
+        data = page.images[0].data
+
+    img = Image.open(io.BytesIO(data))
+    if cfg.get("trim", False):
+        img = trim(img)
+    # img.show()
+
+    first, last, date = parse_filename(fname)
+
+    # Config has region as percentages, convert to pixel offsets
+    for name, (_left, _upper, _right, _lower) in regions.items():  # type: ignore
+        width, height = img.size
+        left = _left * width
+        upper = _upper * height
+        right = _right * width
+        lower = _lower * height
+
+        sig = find_signature(img, (left, upper, right, lower))
+        # Some signatories do not use full box, look for top half and bottom half
+        sections = signature_sections(sig)
+        density = max(*[section.mean() for section in sections])
+        _fn = basename(fname)
+        source = ":".join(fname.split("/")[2:4])
+        if density > density_threshold:
+            print(f"{first}|{last}|{date}|{source}|{name}|Y|{density:0.1f}")
+        else:
+            print(f"{first}|{last}|{date}|{source}|{name}|N|{density:0.1f}")
+            # Image.fromarray(sig, mode="L").show()  # XXX
 
 
 def find_outline(arr: np.ndarray) -> np.ndarray:
@@ -72,52 +130,3 @@ def signature_sections(sig):
     middle_horiz = sig[:, nCols // 3 : 2 * nCols // 3]
     right_third = sig[:, 2 : nCols // 3 :]
     return top_half, bottom_half, middle_vert, left_third, middle_horiz, right_third
-
-
-def usage():
-    print(f"USAGE: {basename(__file__)} [pdf1 [pdf2 [...]]]")
-    print("Must have file `check_sigs.yml` containing page layout info")
-    sys.exit(1)
-
-
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        usage()
-
-    with open("check_sigs.yml") as config:
-        try:
-            regions = yaml.safe_load(config)
-        except:
-            usage()
-
-    print("Firstname|Lastname|Date|Category|Signed|SigDensity")
-    for fname in sys.argv[1:]:
-        reader = PdfReader(fname)
-        page = reader.pages[0]
-        try:
-            # The real page is typically in index 1
-            data = page.images[1].data
-        except IndexError:
-            # But sometimes there is only index 0
-            data = page.images[0].data
-        img = Image.open(io.BytesIO(data))
-        first, last, date = parse_filename(fname)
-
-        # Config has region as percentages, convert to pixel offsets
-        for name, (_left, _upper, _right, _lower) in regions.items():  # type: ignore
-            width, height = img.size
-            left = _left * width
-            upper = _upper * height
-            right = _right * width
-            lower = _lower * height
-
-            sig = find_signature(img, (left, upper, right, lower))
-            # Some signatories do not use full box, look for top half and bottom half
-            sections = signature_sections(sig)
-            density = max(*[section.mean() for section in sections])
-            fn = basename(fname)
-            if density > density_threshold:
-                print(f"{first}|{last}|{date}|{name}|Y|{density:0.1f}")
-            else:
-                print(f"{first}|{last}|{date}|{name}|N|{density:0.1f}")
-                # Image.fromarray(sig, mode="L").show()  # XXX
