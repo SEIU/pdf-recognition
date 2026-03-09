@@ -1,0 +1,17 @@
+name: HCMI
+density_threshold: 5
+trim: false
+signatures:
+  repr:
+    # left, upper, right, lower (page percentage)
+    - 0.05
+    - 0.40
+    - 0.80
+    - 0.55
+
+  dues:
+    # left, upper, right, lower (page percentage)
+    - 0.05
+    - 0.60
+    - 0.80
+    - 0.82

@@ -1,0 +1,31 @@
+#!/usr/bin/env python
+from os.path import basename
+import sys
+import yaml
+
+import click
+
+sys.path.insert(0, ".")  # Assuming check_sigs.py is in the same directory as script
+from check_sigs import report
+
+
+@click.command()
+@click.argument("pdfs", nargs=-1, type=click.Path(exists=True))
+@click.option(
+    "-c",
+    "--config",
+    default="check_sigs.yml",
+    type=click.Path(exists=True),
+    help="Configuration file",
+)
+def process_pdfs(pdfs, config):
+    with open(config) as config:
+        cfg = yaml.safe_load(config)
+
+    print("Firstname|Lastname|Date|Source|Category|Signed|SigDensity")
+    for fname in pdfs:
+        report(fname, cfg)
+
+
+if __name__ == "__main__":
+    process_pdfs()
