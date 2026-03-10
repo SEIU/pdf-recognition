@@ -44,7 +44,6 @@ def report(fname: str, cfg: dict) -> None:
     img = Image.open(io.BytesIO(data))
     if cfg.get("trim", False):
         img = trim(img)
-    # img.show()
 
     first, last, date = parse_filename(fname)
 
@@ -66,7 +65,6 @@ def report(fname: str, cfg: dict) -> None:
             print(f"{first}|{last}|{date}|{source}|{name}|Y|{density:0.1f}")
         else:
             print(f"{first}|{last}|{date}|{source}|{name}|N|{density:0.1f}")
-            # Image.fromarray(sig, mode="L").show()  # XXX
 
 
 def find_outline(arr: np.ndarray) -> np.ndarray:
@@ -92,8 +90,12 @@ def find_outline(arr: np.ndarray) -> np.ndarray:
                 break
         elif top_line > 0:
             found_top = True
-
-    arr = arr[top_line + 1 : bottom_line]
+    
+    if found_top:
+        arr = arr[top_line + 1 : bottom_line]
+    else:
+        # Found no outline, return array of zeros (black; no signature)
+        arr[:,:] = 0
     return arr
 
 
