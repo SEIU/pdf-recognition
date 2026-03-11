@@ -8,7 +8,7 @@ dependencies = [
     "click",
     "ipython",
     "numpy",
-    "pandas",
+    "polars",
     "pillow",
     "pypdf[image]",
     "pyyaml",

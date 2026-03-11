@@ -1,0 +1,11 @@
+name: California Gig Workers (Default)
+density_threshold: 5
+trim: true
+signatures:
+  auth:
+    # left, upper, right, lower (page percentage)
+    - 0.00
+    - 0.90
+    - 1.00
+    - 1.00
+

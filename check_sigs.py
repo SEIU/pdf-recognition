@@ -1,5 +1,6 @@
 import io
 from os.path import basename
+import re
 
 import numpy as np
 from PIL import Image, ImageChops
@@ -31,6 +32,7 @@ def report(fname: str, cfg: dict) -> None:
         )
     regions = cfg["signatures"]
     density_threshold = cfg.get("density_threshold", default_density_threshold)
+    cfgname = cfg.get("name", "Unavailable")
 
     reader = PdfReader(fname)
     page = reader.pages[0]
@@ -44,7 +46,6 @@ def report(fname: str, cfg: dict) -> None:
     img = Image.open(io.BytesIO(data))
     if cfg.get("trim", False):
         img = trim(img)
-    # img.show()
 
     first, last, date = parse_filename(fname)
 
@@ -59,14 +60,16 @@ def report(fname: str, cfg: dict) -> None:
         sig = find_signature(img, (left, upper, right, lower))
         # Some signatories do not use full box, look for top half and bottom half
         sections = signature_sections(sig)
-        density = max(*[section.mean() for section in sections])
+        means = [section.mean() for section in sections if section.size > 1]
+        density = max(*means) if means else 0
         _fn = basename(fname)
-        source = ":".join(fname.split("/")[2:4])
-        if density > density_threshold:
-            print(f"{first}|{last}|{date}|{source}|{name}|Y|{density:0.1f}")
-        else:
-            print(f"{first}|{last}|{date}|{source}|{name}|N|{density:0.1f}")
-            # Image.fromarray(sig, mode="L").show()  # XXX
+        src = ":".join(fname.split("/")[3:5])
+        result = "Y" if density > density_threshold else "N"
+        print(
+            f"{first}|{last}|{date}|{src}|{name}|{result}|{density:0.1f}"
+            f"|{cfgname}|{basename(fname)}",
+            flush=True,
+        )
 
 
 def find_outline(arr: np.ndarray) -> np.ndarray:
@@ -93,7 +96,11 @@ def find_outline(arr: np.ndarray) -> np.ndarray:
         elif top_line > 0:
             found_top = True
 
-    arr = arr[top_line + 1 : bottom_line]
+    if found_top:
+        arr = arr[top_line + 1 : bottom_line]
+    else:
+        # Found no outline, return array of zeros (black; no signature)
+        arr[:, :] = 0
     return arr
 
 
@@ -110,8 +117,13 @@ def find_signature(img, region: tuple[float, float, float, float]) -> np.ndarray
 
 def parse_filename(fname: str) -> tuple[str, str, str]:
     "Extract firstname, lastname, and date from scan filename"
-    date_at = fname.rfind("202")  # ISO 8601 202N-NN-NN
-    date = fname[date_at : date_at + 10]
+    date_loc = re.search(r"202\d-", fname)
+    if date_loc is None:
+        date = "Unknown"
+        date_at = 0
+    else:
+        date_at = date_loc.start()  # ISO 8601 202N-NN-NN
+        date = fname[date_at : date_at + 10]
     name = fname[: date_at - 1].split("/")[-1]
     # There are sometimes dots inside name components :-(
     parts = name.split(".")
