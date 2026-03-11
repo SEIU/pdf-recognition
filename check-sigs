@@ -22,7 +22,10 @@ def process_pdfs(pdfs, config):
     with open(config) as config:
         cfg = yaml.safe_load(config)
 
-    print("Firstname|Lastname|Date|Source|Category|Signed|SigDensity")
+    print(
+        "Firstname|Lastname|Date|Source|Category|Signed|SigDensity|Config|Filename",
+        flush=True,
+    )
     for fname in pdfs:
         report(fname, cfg)
 
