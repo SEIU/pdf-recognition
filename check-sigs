@@ -14,7 +14,7 @@ from check_sigs import report
 @click.option(
     "-c",
     "--config",
-    default="check_sigs.yml",
+    default="check_sigs.yaml",
     type=click.Path(exists=True),
     help="Configuration file",
 )

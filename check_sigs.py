@@ -60,7 +60,8 @@ def report(fname: str, cfg: dict) -> None:
         sig = find_signature(img, (left, upper, right, lower))
         # Some signatories do not use full box, look for top half and bottom half
         sections = signature_sections(sig)
-        density = max(*[section.mean() for section in sections if section.size > 1])
+        means = [section.mean() for section in sections if section.size > 1]
+        density = max(*means) if means else 0
         _fn = basename(fname)
         src = ":".join(fname.split("/")[3:5])
         result = "Y" if density > density_threshold else "N"
