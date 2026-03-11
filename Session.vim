@@ -9,33 +9,27 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
 endif
 let s:shortmess_save = &shortmess
 set shortmess+=aoO
-badd +57 check_sigs.py
+badd +117 check_sigs.py
+badd +0 check-sigs
 argglobal
 %argdel
 $argadd check_sigs.py
-edit check_sigs.py
+edit check-sigs
 argglobal
+balt check_sigs.py
 setlocal foldmethod=indent
 setlocal foldexpr=0
 setlocal foldmarker={{{,}}}
 setlocal foldignore=#
-setlocal foldlevel=4
+setlocal foldlevel=0
 setlocal foldminlines=1
 setlocal foldnestmax=20
 setlocal foldenable
-24
-sil! normal! zo
-52
-sil! normal! zo
-71
-sil! normal! zo
-85
-sil! normal! zo
-let s:l = 112 - ((38 * winheight(0) + 30) / 61)
+let s:l = 1 - ((0 * winheight(0) + 30) / 61)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 112
+keepjumps 1
 normal! 0
 tabnext 1
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0 && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
