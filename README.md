@@ -14,7 +14,7 @@ Converts to a rasterized image then looks for a box.
 
 ### Dependencies
 
-* Python 3.12.3 (latest) via Bash Command Line
+* Python 3.14 (latest) via Bash Command Line
 * Git
 * [uv](https://docs.astral.sh/uv/getting-started/installation/) 0.10.8 (latest)
 
@@ -43,11 +43,12 @@ Any advise for common problems or issues.
 
 ## Authors
 
-David Mertz
-[@DomPizzie](https://securityreflections.substack.com/about)
+[David Mertz](https://securityreflections.substack.com/about)
 
 ## Version History
 
+* 0.3
+    * More robust selection of different configurations.
 * 0.2
     * ReadMe Added
     * See [commit change]() or See [release history]()
