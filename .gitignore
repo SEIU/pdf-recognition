@@ -1,7 +1,11 @@
 # Exclude any generated PDFs that could accidentally contain PII
 *.pdf
+
 # Exclude the output/ directory
 output/
+
+# Editor traces not needed
+Session.vim
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
