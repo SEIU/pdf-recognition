@@ -29,11 +29,11 @@ Converts to a rasterized image then looks for a box.
 
 * For single card
 ```
-./check_sigs ../location_of_card/card.pdf
+./check-sigs ../location_of_card/card.pdf
 ```
 * For multiple cards
 ```
-ls ../location_of_files/* | xargs ./check_sigs
+ls ../location_of_files/* | xargs ./check-sigs
 ```
 
 ## Help
